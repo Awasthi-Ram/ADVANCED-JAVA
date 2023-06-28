@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Employee Form</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="http://login2explore.com/jpdb/resources/js/0.0.4/jpdb-commons.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Employee Form</h2>
+        <form id="empForm">
+            <div class="form-group">
+                <label for="empId">Employee ID:</label>
+                <input type="text" class="form-control" name="empId" id="empId" placeholder="Enter Employee ID"
+                    onchange="getEmp()">
+            </div>
+            <div class="form-group">
+                <label for="empName">Name:</label>
+                <input type="text" class="form-control" id="empName" placeholder="Enter Name" name="empName">
+            </div>
+            <div class="form-group">
+                <label for="empSalary">Salary:</label>
+                <input type="text" class="form-control" id="empSalary" placeholder="Enter Salary" name="empSalary">
+            </div>
+            <div class="form-group">
+                <label for="empHRA">HRA:</label>
+                <input type="text" class="form-control" id="empHRA" placeholder="Enter HRA" name="empHRA">
+            </div>
+            <div class="form-group">
+                <label for="empDA">DA:</label>
+                <input type="text" class="form-control" id="empDA" placeholder="Enter DA" name="empDA">
+            </div>
+            <div class="form-group">
+                <label for="empDeduction">Deduction:</label>
+                <input type="text" class="form-control" id="empDeduction" placeholder="Enter Deduction"
+                    name="empDeduction">
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" id="saveBtn" onclick="saveEmployee()"
+                    disabled>Save</button>
+                <button type="button" class="btn btn-primary" id="changeBtn" onclick="changeEmployee()"
+                    disabled>Change</button>
+                <button type="button" class="btn btn-primary" id="resetBtn" onclick="resetForm()"
+                    disabled>Reset</button>
+            </div>
+        </form>
+    </div>
+    <script>
+
+
+        var jpdbBaseURL = "http://api.login2explore.com:5577";
+        var jpdbirl = "/api/irl";
+        var jpdbiml = "/api/iml";
+        var empdb = "emp_db";
+        var emprel = "emp_rel";
+        var connToken = "90933109|-31949318577977229|90951222";
+       
+        function validation() {
+            var empid, empname, empsal, hra, da, deduct
+            empid = $("#empId").val();
+            empname = $("#empName").val();
+            empsal = $("#empSalary").val();
+            hra = $("#empHRA").val();
+            da = $("#empDA").val();
+            deduct = $("#empDeduction").val();
+            if (empid === "") {
+                alert(" employ id missing");
+                $("#empId").focus();
+                return "";
+            }
+            if (empname === "") {
+                alert(" employ name is missing");
+                $("#empName").focus();
+                return "";
+            }
+            if (empsal === "") {
+                alert(" employ salary missing");
+                $("#empSalary").focus();
+                return "";
+            }
+            if (hra === "") {
+                alert(" employ hra missing");
+                $("#empHRA").focus();
+                return "";
+            }
+            if (da === "") {
+                alert(" employ deduction missing");
+                $("#empDA").focus();
+                return "";
+            }
+            if (deduct === "") {
+                alert(" employ da missing");
+                $("#empDeduction").focus();
+                return "";
+            }
+            var jsonStrObj = {
+                id: empid,
+                name: empname,
+                salary: empsal,
+                hra: hra,
+                da: da,
+                deduction: deduct
+            };
+            return JSON.stringify(jsonStrObj);
+        }
+        function saveEmployee() {
+            // Validate form data
+            var jsonStrobj = validation();
+            if (jsonStrobj === "") {
+                return '';
+            }
+            var putRequest = createPUTRequest(connToken, jsonStrobj, empdb, emprel);
+            jQuery.ajaxSetup({async: false});
+            // executing request
+            var resultObj = executeCommandAtGivenBaseUrl(putRequest,
+                jpdbBaseURL, jpdbiml);
+            alert(JSON.stringify(resultObj));
+            // after completion
+            jQuery.ajaxSetup({async: true});
+            resetForm();
+            $("#empId").focus();
+
+        }
+
+        function changeEmployee() {
+            $("#changeBtn").prop('disabled', true);
+            jsonchg = validation();
+            var updateRequest = createUPDATERecordRequest(connToken, jsonchg, empdb, emprel, localStorage.getItem("recno")
+            );
+            console.log(updateRequest);
+            jQuery.ajaxSetup({async: false});
+            // executing request
+            var resultObj = executeCommandAtGivenBaseUrl(updateRequest,
+                jpdbBaseURL, jpdbiml);
+            // after completion
+            console.log(resultObj);
+            jQuery.ajaxSetup({async: true});
+            resetForm();
+            $("#empId").focus();
+        }
+
+        function resetForm() {
+            // Reset the form fields
+            $("#empId").val('');
+            $("#empName").val('');
+            $("#empSalary").val('');
+            $("#empHRA").val('');
+            $("#empDA").val('');
+            $("#empDeduction").val('');
+            $("#empId").prop('disabled', false);
+            $("#saveBtn").prop('disabled', true);
+            $("#changeBtn").prop('disabled', true);
+            $("#resetBtn").prop('disabled', true);
+            $("#empId").focus();
+        }
+        function getEmpidasjsonobj() {
+            var empid = $("#empId").val();
+            var jsonstr = {
+                id: empid
+            };
+           // alert(jsonstr)
+            return JSON.stringify(jsonstr);
+        }
+        function getEmp() {
+            var empidjsononj = getEmpidasjsonobj();
+            
+            var getrequest = createGET_BY_KEYRequest(connToken, empdb, emprel, empidjsononj);
+            console.log(getrequest);
+            jQuery.ajaxSetup({async: false});
+
+            // executing request
+            var resultObj = executeCommandAtGivenBaseUrl(getrequest,
+                jpdbBaseURL, jpdbirl)
+            console.log(resultObj);
+            console.log(resultObj.status);
+            // after completion
+            jQuery.ajaxSetup({async: true});
+            if (resultObj.status === 400) {
+                $("#saveBtn").prop('disabled', false);
+                $("#resetBtn").prop('disabled', false);
+                $("#empName").focus();
+            } else if (resultObj.status === 200) {
+                $("#empId").prop('disabled', true);
+                fillData(resultObj)
+                $("#resetBtn").prop('disabled', false);
+                $("#changeBtn").prop('disabled', false);
+                $("#empName").focus();
+            }
+        }
+        function saverecno2ls(jsonobj) {
+            var lvdata = JSON.parse(jsonobj.data);
+
+            localStorage.setItem("recno", lvdata.rec_no);
+
+        }
+        function fillData(jsonobj) {
+            saverecno2ls(jsonobj);
+            var record = JSON.parse(jsonobj.data).record;
+
+            $("#empName").val(record.name);
+            $("#empSalary").val(record.salary);
+            $("#empHRA").val(record.hra);
+            $("#empDA").val(record.da);
+            $("#empDeduction").val(record.deduction);
+        }
+    </script>
+</body>
+
+</html>

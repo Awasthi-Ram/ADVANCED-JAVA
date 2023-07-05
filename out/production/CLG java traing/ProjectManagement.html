@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Project Management Form</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="http://login2explore.com/jpdb/resources/js/0.0.4/jpdb-commons.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Project Management Form</h2>
+        <form id="proForm">
+            <div class="form-group">
+                <label for="proId">Project ID:</label>
+                <input type="text" class="form-control" name="proId" id="proId" placeholder="Enter project ID"
+                    onchange="getpro()">
+            </div>
+            
+            <div class="form-group">
+                <label for="proName"> project Name:</label>
+                <input type="text" class="form-control" id="proName" placeholder="Enter project Name" name="proName">
+            </div>
+            <div class="form-group">
+                <label for="proSalary">Assigned-To:</label>
+                <input type="text" class="form-control" id="proSalary" placeholder="Enter Assigned-To" name="proSalary">
+            </div>
+            <div class="form-group">
+                <label for="proHRA">Assignment-Date:</label>
+                <input type="date" class="form-control" id="proHRA" placeholder="Enter HRA" name="proHRA">
+            </div>
+            <div class="form-group">
+                <label for="proDA">Deadline:</label>
+                <input type="date" class="form-control" id="proDA" placeholder="Enter Deadline" name="proDA">
+            </div>
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" id="saveBtn" onclick="saveproloyee()"
+                    disabled>Save</button>
+                <button type="button" class="btn btn-primary" id="changeBtn" onclick="changeproloyee()"
+                    disabled>Change</button>
+                <button type="button" class="btn btn-primary" id="resetBtn" onclick="resetForm()"
+                    disabled>Reset</button>
+            </div>
+        </form>
+    </div>
+    <script>
+
+
+        var jpdbBaseURL = "http://api.login2explore.com:5577";
+        var jpdbirl = "/api/irl";
+        var jpdbiml = "/api/iml";
+        var prodb = "pro_db";
+        var prorel = "pro_rel";
+        var connToken = "90933109|-31949318577977229|90951222";
+       
+        function validation() {
+            var proid, proname, prosal, hra, da
+            proid = $("#proId").val();
+            proname = $("#proName").val();
+            prosal = $("#proSalary").val();
+            hra = $("#proHRA").val();
+            da = $("#proDA").val();
+            
+            if (proid === "") {
+                alert(" proloy id missing");
+                $("#proId").focus();
+                return "";
+            }
+            if (proname === "") {
+                alert(" proloy name is missing");
+                $("#proName").focus();
+                return "";
+            }
+            if (prosal === "") {
+                alert(" proloy salary missing");
+                $("#proSalary").focus();
+                return "";
+            }
+            if (hra === "") {
+                alert(" proloy hra missing");
+                $("#proHRA").focus();
+                return "";
+            }
+            
+            if (da === "") {
+                alert(" proloy da missing");
+                $("#proDA").focus();
+                return "";
+            }
+            var jsonStrObj = {
+                
+                project_id: proid,
+                project_name: proname,
+                Assigned_To: prosal,
+                Assignment_Date: hra,
+                Deadline: da,
+                
+            };
+            return JSON.stringify(jsonStrObj);
+        }
+        function saveproloyee() {
+            // Validate form data
+            var jsonStrobj = validation();
+            if (jsonStrobj === "") {
+                return '';
+            }
+            var putRequest = createPUTRequest(connToken, jsonStrobj, prodb, prorel);
+            jQuery.ajaxSetup({async: false});
+            // executing request
+            var resultObj = executeCommandAtGivenBaseUrl(putRequest,
+                jpdbBaseURL, jpdbiml);
+           // alert(JSON.stringify(resultObj));
+            // after completion
+            jQuery.ajaxSetup({async: true});
+            resetForm();
+            $("#proId").focus();
+
+        }
+
+        function changeproloyee() {
+            $("#changeBtn").prop('disabled', true);
+            jsonchg = validation();
+            var updateRequest = createUPDATERecordRequest(connToken, jsonchg, prodb, prorel, localStorage.getItem("recno1")
+            );
+           // console.log(updateRequest);
+            jQuery.ajaxSetup({async: false});
+            // executing request
+            var resultObj = executeCommandAtGivenBaseUrl(updateRequest,
+                jpdbBaseURL, jpdbiml);
+            // after completion
+            //console.log(resultObj);
+            jQuery.ajaxSetup({async: true});
+            resetForm();
+            $("#proId").focus();
+        }
+
+        function resetForm() {
+            // Reset the form fields
+            $("#proId").val('');
+            $("#proName").val('');
+            $("#proSalary").val('');
+            $("#proHRA").val('');
+            $("#proDA").val('');
+            $("#proId").prop('disabled', false);
+            $("#saveBtn").prop('disabled', true);
+            $("#changeBtn").prop('disabled', true);
+            $("#resetBtn").prop('disabled', true);
+            $("#proId").focus();
+        }
+        function getproidasjsonobj() {
+            var proid = $("#proId").val();
+            var jsonstr = {
+                project_id: proid
+            };
+          //  alert(jsonstr);
+            return JSON.stringify(jsonstr);
+        }
+        function getpro() {
+            
+            var proidjsononj = getproidasjsonobj();
+          //  alert(proidjsononj);
+            var getrequest = createGET_BY_KEYRequest(connToken, prodb, prorel, proidjsononj);
+           // console.log(getrequest);
+            jQuery.ajaxSetup({async: false});
+
+            // executing request
+            var resultObj = executeCommandAtGivenBaseUrl(getrequest,
+                jpdbBaseURL, jpdbirl)
+                //console.log(resultObj);
+           // console.log(resultObj.status);
+            // after completion
+            jQuery.ajaxSetup({async: true});
+            if (resultObj.status === 400) {
+                $("#saveBtn").prop('disabled', false);
+                $("#resetBtn").prop('disabled', false);
+                $("#proName").focus();
+            } else if (resultObj.status === 200) {
+                $("#proId").prop('disabled', true);
+                fillData(resultObj);
+                $("#resetBtn").prop('disabled', false);
+                $("#changeBtn").prop('disabled', false);
+                $("#proName").focus();
+            }
+        }
+        function saverecno2ls(jsonobj) {
+            var lvdata = JSON.parse(jsonobj.data);
+
+            localStorage.setItem("recno1", lvdata.rec_no);
+
+        }
+        function fillData(jsonobj) {
+            saverecno2ls(jsonobj);
+            var record = JSON.parse(jsonobj.data).record;
+            $("#proName").val(record.project_name);
+            $("#proSalary").val(record.Assigned_To);
+            $("#proHRA").val(record.Assignment_Date);
+            $("#proDA").val(record.Deadline);
+           
+        }
+    </script>
+</body>
+
+</html>
